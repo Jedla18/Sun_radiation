@@ -108,7 +108,8 @@ def calculate_radiation_to_square(square_metears : int) -> List[float]:
     return data_total_radiation_hourly_by_day
 
 
-def calculate_total_radiation(data_radiation : List[float]) -> float : return sum(data_radiation)
+def calculate_total_radiation(data_radiation : List[float]) -> float:
+    return sum(data_radiation)
 
 print("slunecni radiace jednotlive dny[W]: ")
 print(calculate_radiation_to_square(area))
