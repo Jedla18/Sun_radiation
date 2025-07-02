@@ -132,7 +132,7 @@ def calculate_radiation_to_days(tilth : int,azimuth : int) -> List[float]:
     return data_total_radiation_hourly_by_day
 
 
-def calculate_radiation_to_square(tilth : int,azimuth : int,square_metears : int ) -> float:
+def calculate_radiation_to_square(tilth : int, azimuth : int, square_metears : int ) -> float:
 
     data_total_radiation_hourly_by_day : List[float] = calculate_radiation_to_days(tilth,azimuth)
 
@@ -175,9 +175,9 @@ def main_run():
 
     for i in range(len(radiation_by_areas)):
         number_of_area_now: str = str(i + 1)
-        print("Na plochu "+ number_of_area_now +" působí: "+ str(round(radiation_by_areas[i],2)) + " W.")
+        print("Na plochu "+ number_of_area_now +" působí: "+ str(round(radiation_by_areas[i], 2)) + " W.")
 
-    print("Celkově na objekt působí: "+ str(round(sum(radiation_by_areas),2)) + " W.")
+    print("Celkově na objekt působí: "+ str(round(sum(radiation_by_areas), 2)) + " W.")
 
 main_run()
 
