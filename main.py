@@ -3,6 +3,7 @@ from typing import List
 import pvlib.irradiance
 import requests
 import pandas as pd
+from pandas import DatetimeIndex
 from pvlib.location import Location
 from timezonefinder import TimezoneFinder
 
@@ -103,13 +104,13 @@ def calculate_radiation_to_days(tilth : int,azimuth : int) -> List[float]:
 
     times = pd.to_datetime(sorted_data_dict["time"])
 
-    tf = TimezoneFinder()
+    tf : TimezoneFinder = TimezoneFinder()
     latitude, longitude = get_latitude_and_longitude()
     timezone_name :str = tf.timezone_at(lat = latitude, lng = longitude)
 
-    times = times.tz_localize(timezone_name)
-    location = Location(latitude,longitude,timezone_name)
-    solar_positions = location.get_solarposition(times)
+    times : DatetimeIndex  = times.tz_localize(timezone_name)
+    location : Location = Location(latitude,longitude,timezone_name)
+    solar_positions : dict = location.get_solarposition(times)
 
     data_total_radiation_hourly_hourly : List[float] = []
 
