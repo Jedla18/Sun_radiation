@@ -158,7 +158,7 @@ def main_run():
 
     tilts: List[int] = list()  # list uhlu
     azimuths: List[int] = list()  # list orientace
-    areas: List[int] = list()
+    areas: List[int] = list()   # list ploch
 
     for i in range(number_of_areas):
         number_of_areas_now : str = str(i + 1)
@@ -175,9 +175,9 @@ def main_run():
 
     for i in range(len(radiation_by_areas)):
         number_of_area_now: str = str(i + 1)
-        print("Na plochu "+ number_of_area_now +" působí:"+ str(round(radiation_by_areas[i],2)) + "W.")
+        print("Na plochu "+ number_of_area_now +" působí: "+ str(round(radiation_by_areas[i],2)) + " W.")
 
-    print("Celkově na objekt působí: "+ str(round(sum(radiation_by_areas),2)) + "W.")
+    print("Celkově na objekt působí: "+ str(round(sum(radiation_by_areas),2)) + " W.")
 
 main_run()
 
