@@ -168,26 +168,39 @@ def calculate_total_radiation_all_areas(tilts : List[int], azimuths : List[int],
 
     return radiatin_in_areas
 
-def save_data_to_excel(radiation_by_areas: List[dict]):
 
-    df = pd.DataFrame(radiation_by_areas)
-    df.to_excel("radiation_by_areas.xlsx", index=False)
 
-def draw_plot(radiation_by_areas: List[dict]) -> None:
+def draw_plot_and_save_to_excel(radiation_by_areas: List[dict]) -> None:
     plt.figure(figsize=(12, 6))
+
+    combined_data = {}
 
     for index, dictionary in enumerate(radiation_by_areas):
         time = []
         radiation = []
-        for j in dictionary:
+        for item in dictionary:
 
-            time.append(j["time"])
-            radiation.append(round(float(j["Total_radiation"]), 2))
+            time.append(item["time"])
+            radiation.append(round(float(item["Total_radiation"]), 2))
 
         plt.plot(time, radiation, label=f"Plocha {index + 1}")
 
+
+        #ukladani_po_jedne_plose
         df = pd.DataFrame(dictionary)
-        df.to_excel("radiation_by_area"+str(index)+".xlsx")
+        df.to_excel("radiation_by_area_"+str(index + 1)+".xlsx")
+
+
+        #ukladani_do_jednoho_souboru
+        if index == 0:
+            combined_data['time'] = time  # Přidáme čas jen jednou (předpokládáme stejný čas ve všech oblastech)
+
+        combined_data[f'Total_radiation_area_{index + 1}'] = radiation
+
+    df = pd.DataFrame(combined_data)
+    df.to_excel("radiation_combined.xlsx", index=False)
+
+
 
     plt.xlabel("Čas")
     plt.ylabel("Radiace [W]")
@@ -235,9 +248,11 @@ def main_run():
 
     radiation_by_areas: List[dict] = calculate_total_radiation_all_areas(tilts, azimuths, areas, gps, start_date, end_date)
 
-    draw_plot(radiation_by_areas)
+    draw_plot_and_save_to_excel(radiation_by_areas)
 
-        #save_data_to_excel(radiation_by_areas)
+    print(radiation_by_areas)
+
+
 """
     for i in range(len(radiation_by_areas)):
         number_of_area_now: str = str(i + 1)
