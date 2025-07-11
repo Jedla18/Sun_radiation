@@ -6,24 +6,11 @@ import pandas as pd
 from pandas import DatetimeIndex
 from pvlib.location import Location
 from timezonefinder import TimezoneFinder
-from urllib3.util.util import to_str
 import matplotlib.pyplot as plt
 
 
 #https://open-meteo.com/en/docs/historical-weather-api?start_date=2023-07-14&hourly=global_tilted_irradiance,direct_normal_irradiance,diffuse_radiation,cloud_cover,terrestrial_radiation&latitude=50.06847&longitude=14.45161&end_date=2023-07-14
 #https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.irradiance.get_total_irradiance.html#pvlib.irradiance.get_total_irradiance
-
-## vstupy fixni zatim ##
-gps : str = "48° 51' 30\" N, 2° 17' 40\" E"
-start_date : str = "2024-06-01"
-end_date : str = "2024-06-02"
-
-tilts: List[int] = [45, 0] # list uhlu
-azimuths: List[int] = [0,45]  # list orientace
-areas: List[int] = [10, 20] # list ploch
-
-####
-
 
 #to do
 
@@ -39,7 +26,7 @@ areas: List[int] = [10, 20] # list ploch
 #udelat fci
 
 
-def get_latitude_and_longitude() -> (float, float):
+def get_latitude_and_longitude(gps : str) -> (float, float):
 
     parts = gps.split(',')
 
@@ -76,11 +63,11 @@ def get_latitude_and_longitude() -> (float, float):
     return latitude, longitude
 
 
-def get_data_from_parameter(tilt: int, azimuth: int) -> dict:
+def get_data_from_parameter(tilt: int, azimuth: int, gps : str, start_date: str , end_date : str) -> dict:
     # Nastavení parametrů
     url = "https://archive-api.open-meteo.com/v1/archive"
 
-    latitude, longitude = get_latitude_and_longitude()
+    latitude, longitude = get_latitude_and_longitude(gps)
 
 
     params = {
@@ -102,9 +89,9 @@ def get_data_from_parameter(tilt: int, azimuth: int) -> dict:
 
     return data_from_api
 
-def get_types_of_radiations_from_data(tilth : int,azimuth : int) -> dict:
+def get_types_of_radiations_from_data(tilth : int,azimuth : int,  gps : str, start_date: str , end_date : str) -> dict:
 
-    data_from_api_hourly : dict = get_data_from_parameter(tilth,azimuth)
+    data_from_api_hourly : dict = get_data_from_parameter(tilth,azimuth, gps, start_date, end_date )
     data_time_hourly : List[str] = data_from_api_hourly["hourly"]["time"]
     data_direct_normal_irradiance_hourly : List[float] = data_from_api_hourly["hourly"]['direct_normal_irradiance']
     data_global_tilted_irradiance_hourly : List[float] = data_from_api_hourly["hourly"]['global_tilted_irradiance']
@@ -120,14 +107,14 @@ def get_types_of_radiations_from_data(tilth : int,azimuth : int) -> dict:
     return sorted_data
 
 
-def calculate_radiation_to_days(tilth : int,azimuth : int) -> dict:
+def calculate_radiation_to_days(tilth : int,azimuth : int, gps : str, start_date: str , end_date : str) -> List[dict]:
 
-    sorted_data_dict : dict = get_types_of_radiations_from_data(tilth,azimuth)
+    sorted_data_dict : dict = get_types_of_radiations_from_data(tilth,azimuth, gps, start_date, end_date )
 
     times = pd.to_datetime(sorted_data_dict["time"])
 
     tf : TimezoneFinder = TimezoneFinder()
-    latitude, longitude = get_latitude_and_longitude()
+    latitude, longitude = get_latitude_and_longitude(gps)
     timezone_name :str = tf.timezone_at(lat = latitude, lng = longitude)
 
     times : DatetimeIndex  = times.tz_localize(timezone_name)
@@ -160,9 +147,9 @@ def calculate_day_from_hours(data_total_radiation_hourly : List[float]) -> List[
 
 """
 
-def calculate_radiation_to_square(tilth : int, azimuth : int, square_metears : int ) -> dict:
+def calculate_radiation_to_square(tilth : int, azimuth : int, square_metears : int, gps : str, start_date: str, end_date : str  ) -> List[dict]:
 
-    data_total_radiation_hourly_by_day : dict = calculate_radiation_to_days(tilth,azimuth)
+    data_total_radiation_hourly_by_day : List[dict] = calculate_radiation_to_days(tilth,azimuth,gps, start_date, end_date )
 
     for i in range(len(data_total_radiation_hourly_by_day)):
         data_total_radiation_hourly_by_day[i]["Total_radiation"] = data_total_radiation_hourly_by_day[i].get("Total_radiation") * square_metears
@@ -171,12 +158,12 @@ def calculate_radiation_to_square(tilth : int, azimuth : int, square_metears : i
 
 
 
-def calculate_total_radiation_all_areas(tilts : List[int], azimuths : List[int], areas: List[int])-> List[dict] :
+def calculate_total_radiation_all_areas(tilts : List[int], azimuths : List[int], areas: List[int], gps : str, start_date: str , end_date : str)-> List[dict] :
 
-    radiatin_in_areas : List[dict] = []
+    radiatin_in_areas : List = []
 
     for i in range(len(tilts)):
-        radiatin_in_areas.append(calculate_radiation_to_square(tilts[i],azimuths[i],areas[i]))
+        radiatin_in_areas.append(calculate_radiation_to_square(tilts[i],azimuths[i],areas[i],gps,start_date,end_date))
 
 
     return radiatin_in_areas
@@ -184,7 +171,6 @@ def calculate_total_radiation_all_areas(tilts : List[int], azimuths : List[int],
 def save_data_to_excel(radiation_by_areas: List[dict]):
 
     df = pd.DataFrame(radiation_by_areas)
-    df = (df.T)
     df.to_excel("radiation_by_areas.xlsx", index=False)
 
 def draw_plot(radiation_by_areas: List[dict]) -> None:
@@ -214,8 +200,20 @@ def draw_plot(radiation_by_areas: List[dict]) -> None:
 
 def main_run():
 
+    ## vstupy fixni zatim ##
+    gps: str = "48° 51' 30\" N, 2° 17' 40\" E"
+    start_date: str = "2024-06-01"
+    end_date: str = "2024-06-02"
+
+    tilts: List[int] = [45, 0]  # list uhlu
+    azimuths: List[int] = [0, 45]  # list orientace
+    areas: List[int] = [10, 20]  # list ploch
+
+    ####
+
+
     """
-    #kod pro zadávání ručně
+    #kod pro zadávání ručně 
     number_of_areas : int  = int(input("Kolik stran má objekt: "))
 
     tilts: List[int] = list()  # list uhlu
@@ -233,7 +231,9 @@ def main_run():
         areas.append(area)
     """
 
-    radiation_by_areas: List[dict] = calculate_total_radiation_all_areas(tilts,azimuths,areas)
+
+
+    radiation_by_areas: List[dict] = calculate_total_radiation_all_areas(tilts, azimuths, areas, gps, start_date, end_date)
 
     draw_plot(radiation_by_areas)
 
